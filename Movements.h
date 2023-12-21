@@ -29,6 +29,18 @@ class Movements {
 
         int getCountR();
 
+        int getEnableL();
+
+        int getEnableR();
+
+        int getPin1();
+
+        int getPin2();
+
+        int getPin3();
+
+        int getPin4();
+
     private:
         double stepcount;  
 
@@ -48,8 +60,8 @@ class Movements {
         int in4;
         int in3;
 
-        int counter_L;
-        int counter_R;
+        int counter_L = 0;
+        int counter_R = 0;
 
         double rightMotorCal;
         double leftMotorCal;

@@ -152,3 +152,27 @@ int Movements::getCountL() {
 int Movements::getCountR() {
     return counter_R;
 }
+
+int Movements::getEnableL() {
+    return enL;
+}
+
+int Movements::getEnableR() {
+    return enR;
+}
+
+int Movements::getPin1() {
+    return in1;
+}
+
+int Movements::getPin2() {
+    return in2;
+}
+
+int Movements::getPin3() {
+    return in3;
+}
+
+int Movements::getPin4() {
+    return in4;
+}

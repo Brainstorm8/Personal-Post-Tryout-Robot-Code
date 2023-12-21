@@ -6,7 +6,7 @@ Mapping::Mapping() {
 
 int getPredictedDirection(int currentDirection, int angleOffset);
 
-void Mapping::getPath(Point cords[], int len, Point pInitial, int int_Direction) { //note that the input points must draw ONLY vertical or horizontal lines
+void Mapping::getPath(Point cords[], int len, Point pInitial, int int_Direction, Movements drivetrain) { //note that the input points must draw ONLY vertical or horizontal lines
     int deltaX;
     int deltaY;
     int final_Direction;

@@ -8,12 +8,14 @@ class Mapping {
     public:
         Mapping();
 
-        void getPath(Point, int, Point, int);
+        void getPath(Point[], int, Point, int, Movements);
 
         int getPredictedDirection(int, int);
 
+
+
     private:
-        Movements drivetrain;
+
 };
 
 #endif
