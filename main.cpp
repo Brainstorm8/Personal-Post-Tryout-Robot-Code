@@ -2,6 +2,8 @@
 #include "Mapping.h"
 #include "Movements.h"
 
+Mapping map;
+
 const byte ENCODER_L = 20;  
 const byte ENCODER_R = 21;  
 
@@ -43,7 +45,7 @@ void loop() {
   if(runState) { //put in move commands here:
     Point points[] = {Point(1,0), Point(1,2), Point(0,2), Point(2,2)};
     int lenPoints = (sizeof(points)/sizeof(points[0]));
-    getPath(points, lenPoints, Point(0,0), 0);
+    map.getPath(points, lenPoints, Point(0,0), 0);
     
     runState = false;
     Serial.print("Run complete");

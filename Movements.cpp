@@ -1,35 +1,39 @@
 #include <Arduino.h>
 #include "Movements.h"
 
-const double stepcount = 20.00;  // 20 Slots in disk, change if different
+Movements::Movements() {
+    stepcount = 20.00;  // 20 Slots in disk, change if different
 
-// Constant for wheel diameter
-const double wheeldiameter = 66.10; // Wheel diameter in millimeters, change if different
-const double wheelCircumference = (wheeldiameter * 3.14) / 10; // Calculate wheel wheelCircumference in cm
-const double cm_step = wheelCircumference / stepcount;  // CM per Step
+    // Constant for wheel diameter
+    wheeldiameter = 66.10; // Wheel diameter in millimeters, change if different
+    wheelCircumference = (wheeldiameter * 3.14) / 10; // Calculate wheel wheelCircumference in cm
+    cm_step = wheelCircumference / stepcount;  // CM per Step
 
-const double distanceBetweenWheels = 13.2; //distance between wheels in cm
+    distanceBetweenWheels = 13.2; //distance between wheels in cm
 
-// Left Motor
+    // Left Motor
 
-const int enL = 8;
-const int in1 = 7;
-const int in2 = 6;
+    enL = 8;
+    in1 = 7;
+    in2 = 6;
 
-// Right Motor
+    // Right Motor
 
-const int enR = 3; 
-const int in4 = 4;
-const int in3 = 5;
+    enR = 3; 
+    in4 = 4;
+    in3 = 5;
 
-int counter_L = 0;
-int counter_R = 0;
+    counter_L = 0;
+    counter_R = 0;
 
-const double rightMotorCal = 1.0;
-const double leftMotorCal = .77;
+    rightMotorCal = 1.0;
+    leftMotorCal = .77;
+}
+
+
 
 // Function to convert from centimeters to steps
-int cmToSteps(double cm) {
+int Movements::cmToSteps(double cm) {
 
     int result;  // Final calculation result
 
@@ -40,7 +44,7 @@ int cmToSteps(double cm) {
 }
 
 
-void setDirection(int dir) {
+void Movements::setDirection(int dir) {
     if(dir == 0) {
         digitalWrite(in1, HIGH);
         digitalWrite(in2, LOW);
@@ -74,7 +78,7 @@ void setDirection(int dir) {
 
 
 
-void move(int cm, int mspeed) {
+void Movements::move(int cm, int mspeed) {
     int steps = cmToSteps(cm);
     counter_L = 0;  //  reset counter A to zero
     counter_R = 0;  //  reset counter B to zero
@@ -103,17 +107,17 @@ void move(int cm, int mspeed) {
     delay(500);
 }
 
-void moveForward(int cm, int mspeed) {
+void Movements::moveForward(int cm, int mspeed) {
     setDirection(0);
     move(cm, mspeed);
 } 
 
-void moveBackward(int cm, int mspeed) {
+void Movements::moveBackward(int cm, int mspeed) {
     setDirection(180);
     move(cm, mspeed);
 } 
 
-void turn(double degrees, int mspeed) { //turn to a specific angular position
+void Movements::turn(double degrees, int mspeed) { //turn to a specific angular position
     const double turning_circumference = 3.14*distanceBetweenWheels; //circumference in cm
 
     double arcLength = (degrees/360.0)*turning_circumference; //arc length of turn in cm
@@ -121,30 +125,30 @@ void turn(double degrees, int mspeed) { //turn to a specific angular position
     move(arcLength, mspeed);
 } 
 
-void turnLeft(double degrees, int mspeed) {
+void Movements::turnLeft(double degrees, int mspeed) {
     setDirection(270);
     turn(degrees, mspeed);
 }
 
-void turnRight(double degrees, int mspeed) {
+void Movements::turnRight(double degrees, int mspeed) {
     setDirection(90);
     turn(degrees, mspeed);
 }
 
 
-void ISR_countL()  {
+void Movements::ISR_countL()  {
     counter_L++;
 } 
 
 // Motor B pulse count ISR
-void ISR_countR()  {
+void Movements::ISR_countR()  {
     counter_R++; 
 }
 
-int getCountL() {
+int Movements::getCountL() {
     return counter_L;
 }
 
-int getCountR() {
+int Movements::getCountR() {
     return counter_R;
 }

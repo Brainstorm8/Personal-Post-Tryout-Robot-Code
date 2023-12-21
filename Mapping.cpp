@@ -1,49 +1,12 @@
-#include "Movements.h"
 #include "Mapping.h"
+
+Mapping::Mapping() {
+
+}
 
 int getPredictedDirection(int currentDirection, int angleOffset);
 
-
-class Point {
-    public: //constructor
-        Point(int x, int y) {
-            xCord = x;
-            yCord = y;
-        }
-
-        int getX() {
-            return xCord;
-        }
-
-        int getY() {
-            return yCord;
-        }
-
-        void incX() {
-            xCord ++;
-        }
-
-        void decX() {
-            xCord --;
-        }
-
-        void incY() {
-            yCord ++;
-        }
-
-        void decY() {
-            yCord --;
-        }
-
-
-    private:
-        int xCord;
-        int yCord;
-};
-
-
-
-void getPath(Point cords[], int len, Point pInitial, int int_Direction) { //note that the input points must draw ONLY vertical or horizontal lines
+void Mapping::getPath(Point cords[], int len, Point pInitial, int int_Direction) { //note that the input points must draw ONLY vertical or horizontal lines
     int deltaX;
     int deltaY;
     int final_Direction;
@@ -52,7 +15,7 @@ void getPath(Point cords[], int len, Point pInitial, int int_Direction) { //note
     bool goReverse;
     Point current_Point = pInitial;
 
-    moveForward(28, 110);
+    drivetrain.moveForward(28, 110);
 
 
     // int numInstructions = std::extent<decltype(cords)>::value;
@@ -78,7 +41,7 @@ void getPath(Point cords[], int len, Point pInitial, int int_Direction) { //note
 
         predicted_Direction = getPredictedDirection(current_Direction, 90); //gives turning direction
         if(predicted_Direction == final_Direction) {
-            turnRight(90, 110);
+            drivetrain.turnRight(90, 110);
             current_Direction = final_Direction;
         } else {
             predicted_Direction = getPredictedDirection(current_Direction, 180);
@@ -89,7 +52,7 @@ void getPath(Point cords[], int len, Point pInitial, int int_Direction) { //note
                 predicted_Direction = getPredictedDirection(current_Direction, 270);
 
                 if(predicted_Direction == final_Direction) {
-                    turnLeft(90, 110);
+                    drivetrain.turnLeft(90, 110);
                     current_Direction = final_Direction;
                 }
             }
@@ -98,9 +61,9 @@ void getPath(Point cords[], int len, Point pInitial, int int_Direction) { //note
         if(deltaX != 0) { //Move forwards and updates position
             for(int j = 0; j < abs(deltaX); j++) {
                 if(goReverse) {
-                    moveBackward(50, 110);
+                    drivetrain.moveBackward(50, 110);
                 } else {
-                    moveForward(50, 110);
+                    drivetrain.moveForward(50, 110);
                 }
 
                 if(deltaX > 0) {
@@ -113,9 +76,9 @@ void getPath(Point cords[], int len, Point pInitial, int int_Direction) { //note
         } else if(deltaY != 0) {
             for(int j = 0; j < abs(deltaY); j++) {
                 if(goReverse) {
-                    moveBackward(50, 110);
+                    drivetrain.moveBackward(50, 110);
                 } else {
-                    moveForward(50, 110);
+                    drivetrain.moveForward(50, 110);
                 }
 
                 if(deltaY > 0) {
@@ -128,7 +91,7 @@ void getPath(Point cords[], int len, Point pInitial, int int_Direction) { //note
     }
 }
 
-int getPredictedDirection(int currentDirection, int angleOffset) {
+int Mapping::getPredictedDirection(int currentDirection, int angleOffset) {
     int prediction = currentDirection + angleOffset;
     if(prediction >= 360) {
         prediction -= 360;

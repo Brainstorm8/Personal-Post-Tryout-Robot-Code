@@ -3,6 +3,8 @@
 
 class Movements {
     public:
+        Movements(); //constructor
+
         int cmToSteps(double);
 
         void setDirection(int);
@@ -28,29 +30,29 @@ class Movements {
         int getCountR();
 
     private:
-        const double stepcount;  
+        double stepcount;  
 
-        const double wheeldiameter; 
-        const double wheelCircumference;
-        const double cm_step;  
+        double wheeldiameter; 
+        double wheelCircumference;
+        double cm_step;  
 
-        const double distanceBetweenWheels; 
-
-
-        const int enL;
-        const int in1;
-        const int in2;
+        double distanceBetweenWheels; 
 
 
-        const int enR; 
-        const int in4;
-        const int in3;
+        int enL;
+        int in1;
+        int in2;
+
+
+        int enR; 
+        int in4;
+        int in3;
 
         int counter_L;
         int counter_R;
 
-        const double rightMotorCal;
-        const double leftMotorCal;
+        double rightMotorCal;
+        double leftMotorCal;
 };
 
 #endif
