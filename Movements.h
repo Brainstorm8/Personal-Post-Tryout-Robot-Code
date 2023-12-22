@@ -21,9 +21,9 @@ class Movements {
 
         void turnRight(double, int);
 
-        void ISR_countL();
+        void incCountL();
 
-        void ISR_countR();
+        void incCountR();
 
         int getCountL();
 
@@ -60,8 +60,8 @@ class Movements {
         int in4;
         int in3;
 
-        int counter_L = 0;
-        int counter_R = 0;
+        int counter_L;
+        int counter_R;
 
         double rightMotorCal;
         double leftMotorCal;

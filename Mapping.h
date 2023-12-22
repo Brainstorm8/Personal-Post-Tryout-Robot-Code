@@ -12,7 +12,7 @@ class Mapping {
 
         int getPredictedDirection(int, int);
 
-
+        int getAbsoluteVal(int num);
 
     private:
 

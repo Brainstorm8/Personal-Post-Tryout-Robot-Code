@@ -136,12 +136,12 @@ void Movements::turnRight(double degrees, int mspeed) {
 }
 
 
-void Movements::ISR_countL()  {
+void Movements::incCountL()  {
     counter_L++;
 } 
 
 // Motor B pulse count ISR
-void Movements::ISR_countR()  {
+void Movements::incCountR()  {
     counter_R++; 
 }
 

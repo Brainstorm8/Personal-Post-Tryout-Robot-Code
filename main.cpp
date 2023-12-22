@@ -4,7 +4,7 @@
 #include "Movements.h"
 
 Movements drivetrain;
-Mapping map;
+Mapping path;
 
 
 const byte ENCODER_L = 20;  
@@ -22,6 +22,14 @@ void ISR_button() {
   }
 }
 
+void ISR_countL() {
+  drivetrain.incCountL();
+}
+
+void ISR_countR() {
+  drivetrain.incCountR();
+}
+
 void setup() 
 {
   Serial.begin(9600);
@@ -29,8 +37,8 @@ void setup()
 
   pinMode(ENCODER_L, INPUT_PULLUP);
   pinMode(ENCODER_R, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt (ENCODER_L), drivetrain.ISR_countL(), RISING);
-  attachInterrupt(digitalPinToInterrupt (ENCODER_R), drivetrain.ISR_countR(), RISING);
+  attachInterrupt(digitalPinToInterrupt (ENCODER_L), ISR_countL, RISING);
+  attachInterrupt(digitalPinToInterrupt (ENCODER_R), ISR_countR, RISING);
 
   pinMode(drivetrain.getEnableL(), OUTPUT);
   pinMode(drivetrain.getEnableR(), OUTPUT);
@@ -48,7 +56,7 @@ void loop() {
   if(runState) { //put in move commands here:
     Point points[] = {Point(1,0), Point(1,2), Point(0,2), Point(2,2)};
     int lenPoints = (sizeof(points)/sizeof(points[0]));
-    map.getPath(points, lenPoints, Point(0,0), 0, drivetrain);
+    path.getPath(points, lenPoints, Point(0,0), 0, drivetrain);
     
     runState = false;
     Serial.print("Run complete");

@@ -59,7 +59,7 @@ void Mapping::getPath(Point cords[], int len, Point pInitial, int int_Direction,
         }
 
         if(deltaX != 0) { //Move forwards and updates position
-            for(int j = 0; j < abs(deltaX); j++) {
+            for(int j = 0; j < getAbsoluteVal(deltaX); j++) {
                 if(goReverse) {
                     drivetrain.moveBackward(50, 110);
                 } else {
@@ -74,7 +74,7 @@ void Mapping::getPath(Point cords[], int len, Point pInitial, int int_Direction,
                 
             }
         } else if(deltaY != 0) {
-            for(int j = 0; j < abs(deltaY); j++) {
+            for(int j = 0; j < getAbsoluteVal(deltaY); j++) {
                 if(goReverse) {
                     drivetrain.moveBackward(50, 110);
                 } else {
@@ -98,3 +98,11 @@ int Mapping::getPredictedDirection(int currentDirection, int angleOffset) {
     }
     return prediction;
 }
+
+int Mapping::getAbsoluteVal(int num) {
+    if(num < 0) {
+        num *= -1;
+    }
+
+    return num;
+} 
