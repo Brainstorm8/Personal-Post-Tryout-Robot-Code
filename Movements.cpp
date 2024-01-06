@@ -2,14 +2,12 @@
 #include "Movements.h"
 
 Movements::Movements() {
-    stepcount = 20.00;  // 20 Slots in disk, change if different
-
-    // Constant for wheel diameter
-    wheeldiameter = 66.10; // Wheel diameter in millimeters, change if different
-    wheelCircumference = (wheeldiameter * 3.14) / 10; // Calculate wheel wheelCircumference in cm
+    stepcount = 620.0; //measured
+    wheeldiameter = 6.70; // Wheel diameter in cm
+    wheelCircumference = wheeldiameter * 3.14; // Calculate wheel wheelCircumference in cm
     cm_step = wheelCircumference / stepcount;  // CM per Step
 
-    distanceBetweenWheels = 13.2; //distance between wheels in cm
+    distanceBetweenWheels = 20.4; //distance between wheels in cm
 
     // Left Motor
 
@@ -26,8 +24,8 @@ Movements::Movements() {
     counter_L = 0;
     counter_R = 0;
 
-    rightMotorCal = 1.0;
-    leftMotorCal = .77;
+    rightMotorCal = 1.00;
+    leftMotorCal = .98;
 }
 
 
@@ -59,14 +57,14 @@ void Movements::setDirection(int dir) {
 
         digitalWrite(in3, LOW);
         digitalWrite(in4, HIGH);
-    } else if (dir == 270) { //turning left
+    } else if (dir == 90) { //turning left
 
         digitalWrite(in1, LOW);
         digitalWrite(in2, HIGH);
 
         digitalWrite(in3, HIGH);
         digitalWrite(in4, LOW);
-    } else if (dir == 90) { //turning right
+    } else if (dir == -90) { //turning right
 
         digitalWrite(in1, HIGH);
         digitalWrite(in2, LOW);
@@ -76,65 +74,166 @@ void Movements::setDirection(int dir) {
     }
 }
 
-
-
-void Movements::move(int cm, int mspeed) {
+void Movements::move(int cm, int maxSpeed, boolean goingForward, MPU6050 mpu) {
     int steps = cmToSteps(cm);
+
+    const double startTime = millis();
+    double initTime = startTime;
+    double currTime = startTime;
+    double elapsedTime;
+
+    double angularVel = 0;
+    double angularPos = 0;
+
+    double errorA = 0;
+    double kpA = 9.5;
+
+    double errorD = steps;
+    double kpD = 1.9;
+    double lpower;
+    double rpower;
+
     counter_L = 0;  //  reset counter A to zero
     counter_R = 0;  //  reset counter B to zero
     
     // Go forward until step value is reached
-    while (steps > counter_L && steps > counter_R) {
-    
-        if (steps > counter_L) {
-        analogWrite(enL, mspeed*leftMotorCal);
-        } else {
-        analogWrite(enL, 0);
+    while (abs(errorD) > 1.0) { //failsafe, ends movement if it takes longer than 5 seconds && (currTime - startTime) < 5000
+        currTime = millis();
+        elapsedTime = currTime - initTime;
+        if(elapsedTime > 100) { //every 100ms
+            angularVel = mpu.getRotationZ()/131.0;
+            angularPos = angularVel*(elapsedTime/1000.0);
+
+            initTime = currTime;
         }
-        if (steps > counter_R) {
-        analogWrite(enR, mspeed);
-        } else {
-        analogWrite(enR, 0);
+
+        errorA = angularPos;
+
+        errorD = steps - (counter_L + counter_R)/2.0; //averaging encoder data
+
+        lpower = errorD*kpD;
+        rpower = errorD*kpD;
+        
+        if(rpower > maxSpeed) {
+            rpower = maxSpeed;
         }
+
+        if(lpower > maxSpeed) {
+            lpower = maxSpeed;
+        }
+
+        // if(errorA > 0) {
+        //     lpower += errorA*kpA;
+        //     rpower -= errorA*kpA;
+        // } else if (errorA < 0) {
+        //     lpower -= errorA*kpA;
+        //     rpower += errorA*kpA;
+        // }
+
+        if(rpower > 255) {
+            rpower = 255;
+        } else if(rpower < 0) { //no protection for overshoot
+            rpower = 0;
+        }
+
+        if(lpower > 255) {
+            lpower = 255;
+        } else if(lpower < 0) { //no protection for overshoot
+            lpower = 0;
+        }
+
+
+        analogWrite(enL, lpower*leftMotorCal);
+        analogWrite(enR, rpower*rightMotorCal);
+
+        Serial.print(rpower); Serial.print("\t");
+        Serial.print(lpower); Serial.print("\t");
+        Serial.println(errorD);
     }
 
-    // Stop when done
+
     analogWrite(enL, 0);
     analogWrite(enR, 0);
     counter_L = 0; 
     counter_R = 0;  
-    
+}
+
+void Movements::moveForward(int cm, int maxSpeed, MPU6050 mpu) {
+    setDirection(0);
+    move(cm, maxSpeed, true, mpu);
+}
+
+void Movements::moveBackward(int cm, int maxSpeed, MPU6050 mpu) {
+    setDirection(180);
+    move(cm, maxSpeed, false, mpu);
+}
+
+void Movements::turn(double degrees, MPU6050 mpu, int maxSpeed) {
+    double initTime = millis();
+    double currTime = millis();
+    double elapsedTime;
+    double angularPos = 0;
+    double angularVel;
+    double deltaTheta = degrees - angularPos;
+    double intDeltaTheta = 0;
+
+    const double startTime = millis();
+
+    double kp = 6.0;
+    double ki = .50;
+
+    double mpower;
+
+    while(abs(deltaTheta) > 1) { //failsafe, end the turn if it takes longer than 5 seconds  && (currTime - startTime) < 5000
+        currTime = millis();
+        elapsedTime = currTime - initTime;
+
+
+
+        deltaTheta = degrees - angularPos; //error
+
+        mpower = kp*deltaTheta + ki*intDeltaTheta; //adding integral term would cause robot to go haywire
+
+        if(mpower < 0) {
+            mpower = abs(mpower);
+            setDirection(-90);
+        } else if(mpower > 0) {
+            setDirection(90);
+        }
+
+        if(mpower > maxSpeed) {
+            mpower = maxSpeed;
+        } 
+
+
+
+        analogWrite(enL, mpower*leftMotorCal);
+        analogWrite(enR, mpower*rightMotorCal);
+        if(elapsedTime > 100) {
+            angularVel = mpu.getRotationZ()/131.0;
+            angularPos += angularVel*(elapsedTime/1000.0); //integral of angular velocity with respect to time
+            intDeltaTheta += deltaTheta*(elapsedTime/1000.0); //integral of error with respect to time
+            initTime = currTime;
+        }
+        Serial.print(angularPos); Serial.print("\t");
+        Serial.print(ki*intDeltaTheta); Serial.print("\t");
+        Serial.println(deltaTheta);
+    }
+    analogWrite(enL, 0);
+    analogWrite(enR, 0);
+
     delay(500);
 }
 
-void Movements::moveForward(int cm, int mspeed) {
-    setDirection(0);
-    move(cm, mspeed);
-} 
-
-void Movements::moveBackward(int cm, int mspeed) {
-    setDirection(180);
-    move(cm, mspeed);
-} 
-
-void Movements::turn(double degrees, int mspeed) { //turn to a specific angular position
-    const double turning_circumference = 3.14*distanceBetweenWheels; //circumference in cm
-
-    double arcLength = (degrees/360.0)*turning_circumference; //arc length of turn in cm
-
-    move(arcLength, mspeed);
-} 
-
-void Movements::turnLeft(double degrees, int mspeed) {
-    setDirection(270);
-    turn(degrees, mspeed);
-}
-
-void Movements::turnRight(double degrees, int mspeed) {
+void Movements::turnLeft(double degrees, MPU6050 mpu, int maxSpeed) {
     setDirection(90);
-    turn(degrees, mspeed);
+    turn(degrees, mpu, maxSpeed);
 }
 
+void Movements::turnRight(double degrees, MPU6050 mpu, int maxSpeed) {
+    setDirection(-90);
+    turn(-degrees, mpu, maxSpeed);
+}
 
 void Movements::incCountL()  {
     counter_L++;

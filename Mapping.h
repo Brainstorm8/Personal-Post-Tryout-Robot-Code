@@ -3,12 +3,13 @@
 
 #include "Movements.h"
 #include "Point.h"
+#include <vector>
 
 class Mapping {
     public:
         Mapping();
 
-        void getPath(Point[], int, Point, int, Movements);
+        std::vector<int> getPath(Point[], int, Point, int);
 
         int getPredictedDirection(int, int);
 

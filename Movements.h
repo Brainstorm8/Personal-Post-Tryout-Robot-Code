@@ -1,6 +1,8 @@
 #ifndef MOVEMENTS_H
 #define MOVEMENTS_H
 
+#include <MPU6050.h>
+
 class Movements {
     public:
         Movements(); //constructor
@@ -9,17 +11,17 @@ class Movements {
 
         void setDirection(int);
 
-        void move(int, int);
+        void move(int, int, boolean, MPU6050);
 
-        void moveForward(int, int);
+        void moveForward(int, int, MPU6050);
 
-        void moveBackward(int, int);
+        void moveBackward(int, int, MPU6050);
 
-        void turn(double, int);
+        void turn(double, MPU6050, int);
 
-        void turnLeft(double, int);
+        void turnLeft(double, MPU6050, int);
 
-        void turnRight(double, int);
+        void turnRight(double, MPU6050, int);
 
         void incCountL();
 
