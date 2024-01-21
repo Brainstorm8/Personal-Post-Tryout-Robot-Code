@@ -17,11 +17,11 @@ class Movements {
 
         void moveBackward(int, int, MPU6050);
 
-        void turn(double, MPU6050, int);
+        void turn(double, int,  MPU6050);
 
-        void turnLeft(double, MPU6050, int);
+        void turnLeft(double, int, MPU6050);
 
-        void turnRight(double, MPU6050, int);
+        void turnRight(double, int, MPU6050);
 
         void incCountL();
 

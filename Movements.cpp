@@ -24,8 +24,8 @@ Movements::Movements() {
     counter_L = 0;
     counter_R = 0;
 
-    rightMotorCal = 1.00;
-    leftMotorCal = .98;
+    rightMotorCal = .98;
+    leftMotorCal = 1.00;
 }
 
 
@@ -86,10 +86,13 @@ void Movements::move(int cm, int maxSpeed, boolean goingForward, MPU6050 mpu) {
     double angularPos = 0;
 
     double errorA = 0;
-    double kpA = 9.5;
+    double kpA = 0.20; //.20
 
     double errorD = steps;
-    double kpD = 1.9;
+    double kpD = 1.4;//1.8
+    double kiD = .015;
+    double kIntD = 0.0;
+
     double lpower;
     double rpower;
 
@@ -97,12 +100,14 @@ void Movements::move(int cm, int maxSpeed, boolean goingForward, MPU6050 mpu) {
     counter_R = 0;  //  reset counter B to zero
     
     // Go forward until step value is reached
-    while (abs(errorD) > 1.0) { //failsafe, ends movement if it takes longer than 5 seconds && (currTime - startTime) < 5000
+    while (abs(errorD) > 6.0) { //failsafe, ends movement if it takes longer than 5 seconds && (currTime - startTime) < 5000
         currTime = millis();
         elapsedTime = currTime - initTime;
         if(elapsedTime > 100) { //every 100ms
             angularVel = mpu.getRotationZ()/131.0;
-            angularPos = angularVel*(elapsedTime/1000.0);
+            angularPos += angularVel*(elapsedTime/1000.0);
+
+            kIntD += errorD*(elapsedTime/1000.0);
 
             initTime = currTime;
         }
@@ -111,8 +116,8 @@ void Movements::move(int cm, int maxSpeed, boolean goingForward, MPU6050 mpu) {
 
         errorD = steps - (counter_L + counter_R)/2.0; //averaging encoder data
 
-        lpower = errorD*kpD;
-        rpower = errorD*kpD;
+        lpower = errorD*kpD + kIntD*kiD;
+        rpower = errorD*kpD + kIntD*kiD;
         
         if(rpower > maxSpeed) {
             rpower = maxSpeed;
@@ -122,13 +127,24 @@ void Movements::move(int cm, int maxSpeed, boolean goingForward, MPU6050 mpu) {
             lpower = maxSpeed;
         }
 
-        // if(errorA > 0) {
-        //     lpower += errorA*kpA;
-        //     rpower -= errorA*kpA;
-        // } else if (errorA < 0) {
-        //     lpower -= errorA*kpA;
-        //     rpower += errorA*kpA;
+        // if(goingForward) {
+        //     if(errorA > 0) {
+        //         lpower += abs(errorA*kpA);
+        //         rpower -= abs(errorA*kpA);
+        //     } else if (errorA < 0) {
+        //         lpower -= abs(errorA*kpA);
+        //         rpower += abs(errorA*kpA);
+        //     }
+        // } else {
+        //     if(errorA > 0) {
+        //         lpower -= abs(errorA*kpA);
+        //         rpower += abs(errorA*kpA);
+        //     } else if (errorA < 0) {
+        //         lpower += abs(errorA*kpA);
+        //         rpower -= abs(errorA*kpA);
+        //     }
         // }
+
 
         if(rpower > 255) {
             rpower = 255;
@@ -148,6 +164,7 @@ void Movements::move(int cm, int maxSpeed, boolean goingForward, MPU6050 mpu) {
 
         Serial.print(rpower); Serial.print("\t");
         Serial.print(lpower); Serial.print("\t");
+        Serial.print(kIntD); Serial.print("\t");
         Serial.println(errorD);
     }
 
@@ -155,7 +172,7 @@ void Movements::move(int cm, int maxSpeed, boolean goingForward, MPU6050 mpu) {
     analogWrite(enL, 0);
     analogWrite(enR, 0);
     counter_L = 0; 
-    counter_R = 0;  
+    counter_R = 0; 
 }
 
 void Movements::moveForward(int cm, int maxSpeed, MPU6050 mpu) {
@@ -168,7 +185,7 @@ void Movements::moveBackward(int cm, int maxSpeed, MPU6050 mpu) {
     move(cm, maxSpeed, false, mpu);
 }
 
-void Movements::turn(double degrees, MPU6050 mpu, int maxSpeed) {
+void Movements::turn(double degrees, int maxSpeed, MPU6050 mpu) {
     double initTime = millis();
     double currTime = millis();
     double elapsedTime;
@@ -179,12 +196,12 @@ void Movements::turn(double degrees, MPU6050 mpu, int maxSpeed) {
 
     const double startTime = millis();
 
-    double kp = 6.0;
-    double ki = .50;
+    double kp = 3.3;
+    double ki = .78;
 
     double mpower;
 
-    while(abs(deltaTheta) > 1) { //failsafe, end the turn if it takes longer than 5 seconds  && (currTime - startTime) < 5000
+    while(abs(deltaTheta) > 1.0) { //failsafe, end the turn if it takes longer than 3 seconds  && (currTime - startTime) < 3000
         currTime = millis();
         elapsedTime = currTime - initTime;
 
@@ -205,13 +222,16 @@ void Movements::turn(double degrees, MPU6050 mpu, int maxSpeed) {
             mpower = maxSpeed;
         } 
 
-
+        if(mpower > 255) {
+            mpower = 255;
+        }
 
         analogWrite(enL, mpower*leftMotorCal);
         analogWrite(enR, mpower*rightMotorCal);
         if(elapsedTime > 100) {
             angularVel = mpu.getRotationZ()/131.0;
             angularPos += angularVel*(elapsedTime/1000.0); //integral of angular velocity with respect to time
+
             intDeltaTheta += deltaTheta*(elapsedTime/1000.0); //integral of error with respect to time
             initTime = currTime;
         }
@@ -225,14 +245,14 @@ void Movements::turn(double degrees, MPU6050 mpu, int maxSpeed) {
     delay(500);
 }
 
-void Movements::turnLeft(double degrees, MPU6050 mpu, int maxSpeed) {
+void Movements::turnLeft(double degrees, int maxSpeed, MPU6050 mpu) {
     setDirection(90);
-    turn(degrees, mpu, maxSpeed);
+    turn(degrees, maxSpeed, mpu);
 }
 
-void Movements::turnRight(double degrees, MPU6050 mpu, int maxSpeed) {
+void Movements::turnRight(double degrees, int maxSpeed, MPU6050 mpu) {
     setDirection(-90);
-    turn(-degrees, mpu, maxSpeed);
+    turn(-degrees, maxSpeed, mpu);
 }
 
 void Movements::incCountL()  {

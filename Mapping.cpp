@@ -6,14 +6,14 @@ Mapping::Mapping() {
 
 }
 
-int getPredictedDirection(int currentDirection, int angleOffset);
+int getPredictedDirection(int currentDirection, int turnDirection);
 
-std::vector<int> Mapping::getPath(Point cords[], int len, Point pInitial, int int_Direction) { //note that the input points must draw ONLY vertical or horizontal lines
+std::vector<int> Mapping::getPath(Point cords[], int len, Point pInitial, int init_Direction) { //note that the input points must draw ONLY vertical or horizontal lines
     int deltaX;
     int deltaY;
     int final_Direction;
-    int current_Direction = int_Direction;
-    int predicted_Direction;
+    int current_Direction = init_Direction;
+    int turn_Direction;
     bool goReverse;
     Point current_Point = pInitial;
 
@@ -28,9 +28,9 @@ std::vector<int> Mapping::getPath(Point cords[], int len, Point pInitial, int in
 
 
         if(deltaX > 0) { //right
-            final_Direction = 90;
+            final_Direction = -90;
         } else if(deltaX < 0) { //left
-            final_Direction = 270;
+            final_Direction = 90;
         } else if(deltaY > 0) { //up
             final_Direction = 0;
         } else if(deltaY < 0) { //down
@@ -41,22 +41,18 @@ std::vector<int> Mapping::getPath(Point cords[], int len, Point pInitial, int in
 
         goReverse = false;
 
-        predicted_Direction = getPredictedDirection(current_Direction, 90); //gives turning direction
-        if(predicted_Direction == final_Direction) {
-            // drivetrain.turnRight(90, 110);
+        turn_Direction = getTurnDirection(current_Direction, final_Direction); //gives turning direction
+        if(turn_Direction == 90) {
             instructions.push_back(90);
             current_Direction = final_Direction;
         } else {
-            predicted_Direction = getPredictedDirection(current_Direction, 180);
             
-            if(predicted_Direction == final_Direction) {
+            if(getAbsoluteVal(turn_Direction) == 180) {
                 goReverse = true;
             } else {
-                predicted_Direction = getPredictedDirection(current_Direction, 270);
 
-                if(predicted_Direction == final_Direction) {
-                    // drivetrain.turnLeft(90, 110);
-                    instructions.push_back(270);
+                if(turn_Direction == -90) {
+                    instructions.push_back(-90);
                     current_Direction = final_Direction;
                 }
             }
@@ -65,10 +61,8 @@ std::vector<int> Mapping::getPath(Point cords[], int len, Point pInitial, int in
         if(deltaX != 0) { //Move forwards and updates position
             for(int j = 0; j < getAbsoluteVal(deltaX); j++) {
                 if(goReverse) {
-                    // drivetrain.moveBackward(50, 110);
                     instructions.push_back(180);
                 } else {
-                    // drivetrain.moveForward(50, 110);
                     instructions.push_back(0);
                 }
 
@@ -82,10 +76,8 @@ std::vector<int> Mapping::getPath(Point cords[], int len, Point pInitial, int in
         } else if(deltaY != 0) {
             for(int j = 0; j < getAbsoluteVal(deltaY); j++) {
                 if(goReverse) {
-                    // drivetrain.moveBackward(50, 110);
                     instructions.push_back(180);
                 } else {
-                    // drivetrain.moveForward(50, 110);
                     instructions.push_back(0);
                 }
 
@@ -100,12 +92,14 @@ std::vector<int> Mapping::getPath(Point cords[], int len, Point pInitial, int in
     return instructions;
 }
 
-int Mapping::getPredictedDirection(int currentDirection, int angleOffset) {
-    int prediction = currentDirection + angleOffset;
-    if(prediction >= 360) {
-        prediction -= 360;
+int Mapping::getTurnDirection(int currentDirection, int endDirection) {
+    int turnDirection = endDirection - currentDirection;
+    if(turnDirection > 180) {
+        turnDirection -= 360;
+    } else if (turnDirection < -180) {
+        turnDirection += 360;
     }
-    return prediction;
+    return turnDirection;
 }
 
 int Mapping::getAbsoluteVal(int num) {

@@ -11,7 +11,7 @@ class Mapping {
 
         std::vector<int> getPath(Point[], int, Point, int);
 
-        int getPredictedDirection(int, int);
+        int getTurnDirection(int, int);
 
         int getAbsoluteVal(int num);
 

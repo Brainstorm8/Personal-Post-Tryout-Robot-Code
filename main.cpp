@@ -18,14 +18,14 @@ bool buttonPressed = false;
 
 int lenPoints;
 
+int straightSpeed = 200;
+int turningSpeed = 200;
+
+const int waitTime = 150; //time between movements in ms
+
 std::vector<int> instructions;
 
-
-    // double initTime;
-    // double currTime;
-    // double elapsedTime;
-    // double angularPos = 0;
-    // double angularVel;
+Point startingPoint;
 
 void ISR_button() {
   if(runState) {
@@ -47,15 +47,20 @@ void readInstructions(std::vector<int> instructions) {
   const int len = instructions.size();
   for(int i = 0; i < len; i ++) {
     if(instructions.at(i) == 0) {
-      drivetrain.moveForward(50, 110, mpu);
-    } else if(instructions.at(i) == 90) {
-      drivetrain.turnRight(90, mpu, 110);
+            Serial.println("f");
+      drivetrain.moveForward(50, straightSpeed, mpu);
+    } else if(instructions.at(i) == -90) {
+            Serial.println("r");
+      drivetrain.turnRight(90, turningSpeed, mpu);
     } else if(instructions.at(i) == 180) {
-      drivetrain.moveBackward(50, 110, mpu);
-    } else if(instructions.at(i) == 270) {
-      drivetrain.turnLeft(90, mpu, 110);
+            Serial.println("b");
+      drivetrain.moveBackward(50, straightSpeed, mpu);
+    } else if(instructions.at(i) == 90) {
+            Serial.println("l");
+      drivetrain.turnLeft(90, turningSpeed, mpu);
     }
-    delay(500);
+    Serial.println("movement complete");
+    delay(waitTime);
   }
 }
 
@@ -64,12 +69,12 @@ void setup()
   Serial.begin(9600);
 
   mpu.initialize();
-  mpu.setXGyroOffset(-12);
-  mpu.setYGyroOffset(37);
-  mpu.setZGyroOffset(72);
-  mpu.setXAccelOffset(1382);
-  mpu.setYAccelOffset(1066);
-  mpu.setZAccelOffset(1075);
+  mpu.setXGyroOffset(-9);
+  mpu.setYGyroOffset(31);
+  mpu.setZGyroOffset(88);
+  mpu.setXAccelOffset(1505);
+  mpu.setYAccelOffset(1140);
+  mpu.setZAccelOffset(1079);
 
   pinMode(ENCODER_L, INPUT_PULLUP);
   pinMode(ENCODER_R, INPUT_PULLUP);
@@ -86,39 +91,40 @@ void setup()
 
   attachInterrupt(digitalPinToInterrupt(startButton), ISR_button, FALLING);
   Serial.println("Setup complete.");
-  // initTime = millis();
 } 
  
 
 void loop() {
 
+  // Serial.print(drivetrain.getCountL()); Serial.print("\t");
+  // Serial.println(drivetrain.getCountR());
 
-
-  Serial.print(drivetrain.getCountL()); Serial.print("\t"); Serial.println(drivetrain.getCountR());
   
-  if(runState) { //put in move commands here:      
+  if(runState) { //put in move commands here:
+      delay(200);      
       // for(int i = 0; i < 4; i++) {
-      //   drivetrain.moveForward(50, 110, mpu);
-      //   delay(500);
-      //   drivetrain.turnLeft(90, mpu, 110);
-      //   delay(500);
+      //   // drivetrain.moveForward(50, straightSpeed, mpu);
+      //   // delay(waitTime);
+      //   drivetrain.turnRight(90, turningSpeed, mpu);
+      //   delay(waitTime);
       // }
-      // drivetrain.turnLeft(90, mpu, 110);
-      drivetrain.moveForward(50, 110, mpu);
-      delay(100);
-      drivetrain.moveBackward(50, 110, mpu);
+
+        // drivetrain.turnRight(90, turningSpeed, mpu);
 
 
-
+      // startingPoint = Point(0,0);
       // Point points[] = {Point(1,0), Point(1,2), Point(0,2), Point(2,2)};
-      // lenPoints = (sizeof(points)/sizeof(points[0]));
+      startingPoint = Point(2,0);
+      Point points[] = {Point(3,0), Point(3,1), Point(2,1), Point(3,1), Point(3,3), Point(3,2), Point(1,2), Point(1,1), Point(0,1), Point(0,0), Point(0,1), Point(1,1),Point(1,3), Point(2,3)};
+      lenPoints = (sizeof(points)/sizeof(points[0]));
 
-      // drivetrain.moveForward(25, 110);
-      // instructions = path.getPath(points, lenPoints, Point(0,0), 0);
-      // readInstructions(instructions);
+      drivetrain.moveForward(25, straightSpeed, mpu);
+      delay(waitTime);
+      instructions = path.getPath(points, lenPoints, startingPoint, 0);
+      readInstructions(instructions);
 
       runState = false;
       Serial.println("Run complete");
   }
-  delay(500);
+  delay(100);
 }

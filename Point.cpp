@@ -1,5 +1,9 @@
 #include "Point.h"
 
+Point::Point() {
+    
+}
+
 Point::Point(int x, int y) {
     xCord = x;
     yCord = y;

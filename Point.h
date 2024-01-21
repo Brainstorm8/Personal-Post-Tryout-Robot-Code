@@ -3,6 +3,8 @@
 
 class Point {
     public:
+        Point();
+
         Point(int, int);
 
         int getX();
