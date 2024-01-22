@@ -5,11 +5,17 @@
 #include "Point.h"
 #include <vector>
 
+struct instruction{
+    int direction;
+    int multiplier;
+};
+
 class Mapping {
     public:
+
         Mapping();
 
-        std::vector<int> getPath(Point[], int, Point, int);
+        std::vector<instruction> getPath(Point[], int, Point, int);
 
         int getTurnDirection(int, int);
 

@@ -23,7 +23,7 @@ int turningSpeed = 200;
 
 const int waitTime = 150; //time between movements in ms
 
-std::vector<int> instructions;
+std::vector<instruction> instructions;
 
 Point startingPoint;
 
@@ -43,21 +43,17 @@ void ISR_countR() {
   drivetrain.incCountR();
 }
 
-void readInstructions(std::vector<int> instructions) {
+void readInstructions(std::vector<instruction> instructions) {
   const int len = instructions.size();
   for(int i = 0; i < len; i ++) {
-    if(instructions.at(i) == 0) {
-            Serial.println("f");
-      drivetrain.moveForward(50, straightSpeed, mpu);
-    } else if(instructions.at(i) == -90) {
-            Serial.println("r");
-      drivetrain.turnRight(90, turningSpeed, mpu);
-    } else if(instructions.at(i) == 180) {
-            Serial.println("b");
-      drivetrain.moveBackward(50, straightSpeed, mpu);
-    } else if(instructions.at(i) == 90) {
-            Serial.println("l");
-      drivetrain.turnLeft(90, turningSpeed, mpu);
+    if(instructions.at(i).direction == 0) {
+      drivetrain.moveForward(50*instructions.at(i).multiplier, straightSpeed, mpu);
+    } else if(instructions.at(i).direction == -90) {
+      drivetrain.turnRight(90*instructions.at(i).multiplier, turningSpeed, mpu);
+    } else if(instructions.at(i).direction == 180) {
+      drivetrain.moveBackward(50*instructions.at(i).multiplier, straightSpeed, mpu);
+    } else if(instructions.at(i).direction == 90) {
+      drivetrain.turnLeft(90*instructions.at(i).multiplier, turningSpeed, mpu);
     }
     Serial.println("movement complete");
     delay(waitTime);
@@ -114,6 +110,8 @@ void loop() {
 
       // startingPoint = Point(0,0);
       // Point points[] = {Point(1,0), Point(1,2), Point(0,2), Point(2,2)};
+      // startingPoint = Point(0,0);
+      // Point points[] = {Point(0,2)};
       startingPoint = Point(2,0);
       Point points[] = {Point(3,0), Point(3,1), Point(2,1), Point(3,1), Point(3,3), Point(3,2), Point(1,2), Point(1,1), Point(0,1), Point(0,0), Point(0,1), Point(1,1),Point(1,3), Point(2,3)};
       lenPoints = (sizeof(points)/sizeof(points[0]));
@@ -125,6 +123,7 @@ void loop() {
 
       runState = false;
       Serial.println("Run complete");
+      Serial.println(instructions.at(0).multiplier);
   }
   delay(100);
 }

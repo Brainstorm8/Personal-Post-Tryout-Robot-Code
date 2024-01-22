@@ -8,16 +8,17 @@ Mapping::Mapping() {
 
 int getPredictedDirection(int currentDirection, int turnDirection);
 
-std::vector<int> Mapping::getPath(Point cords[], int len, Point pInitial, int init_Direction) { //note that the input points must draw ONLY vertical or horizontal lines
+std::vector<instruction> Mapping::getPath(Point cords[], int len, Point pInitial, int init_Direction) { //note that the input points must draw ONLY vertical or horizontal lines
     int deltaX;
     int deltaY;
     int final_Direction;
     int current_Direction = init_Direction;
     int turn_Direction;
     bool goReverse;
+    instruction newInstruction;
     Point current_Point = pInitial;
 
-    std::vector<int> instructions;
+    std::vector<instruction> instructions;
 
 
     // int numInstructions = std::extent<decltype(cords)>::value;
@@ -43,7 +44,10 @@ std::vector<int> Mapping::getPath(Point cords[], int len, Point pInitial, int in
 
         turn_Direction = getTurnDirection(current_Direction, final_Direction); //gives turning direction
         if(turn_Direction == 90) {
-            instructions.push_back(90);
+            newInstruction.direction = 90;
+            newInstruction.multiplier = 1;
+            instructions.push_back(newInstruction);
+
             current_Direction = final_Direction;
         } else {
             
@@ -52,18 +56,23 @@ std::vector<int> Mapping::getPath(Point cords[], int len, Point pInitial, int in
             } else {
 
                 if(turn_Direction == -90) {
-                    instructions.push_back(-90);
+                    newInstruction.direction = -90;
+                    newInstruction.multiplier = 1;
+                    instructions.push_back(newInstruction);
+                    
                     current_Direction = final_Direction;
                 }
             }
         }
-
+        newInstruction.multiplier = 0;
         if(deltaX != 0) { //Move forwards and updates position
             for(int j = 0; j < getAbsoluteVal(deltaX); j++) {
                 if(goReverse) {
-                    instructions.push_back(180);
+                    newInstruction.direction = 180;
+                    newInstruction.multiplier += 1;
                 } else {
-                    instructions.push_back(0);
+                    newInstruction.direction = 0;
+                    newInstruction.multiplier += 1;
                 }
 
                 if(deltaX > 0) {
@@ -73,12 +82,15 @@ std::vector<int> Mapping::getPath(Point cords[], int len, Point pInitial, int in
                 }
                 
             }
+            instructions.push_back(newInstruction);
         } else if(deltaY != 0) {
             for(int j = 0; j < getAbsoluteVal(deltaY); j++) {
                 if(goReverse) {
-                    instructions.push_back(180);
+                    newInstruction.direction = 180;
+                    newInstruction.multiplier += 1;
                 } else {
-                    instructions.push_back(0);
+                    newInstruction.direction = 0;
+                    newInstruction.multiplier += 1;
                 }
 
                 if(deltaY > 0) {
@@ -87,6 +99,7 @@ std::vector<int> Mapping::getPath(Point cords[], int len, Point pInitial, int in
                     current_Point.decY();
                 }
             }
+            instructions.push_back(newInstruction);
         }
     }
     return instructions;
