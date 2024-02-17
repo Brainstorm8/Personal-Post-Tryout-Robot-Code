@@ -21,7 +21,7 @@ int lenPoints;
 int straightSpeed = 200;
 int turningSpeed = 200;
 
-const int waitTime = 150; //time between movements in ms
+const int waitTime = 250; //time between movements in ms
 
 std::vector<instruction> instructions;
 
@@ -92,8 +92,8 @@ void setup()
 
 void loop() {
 
-  // Serial.print(drivetrain.getCountL()); Serial.print("\t");
-  // Serial.println(drivetrain.getCountR());
+  Serial.print(drivetrain.getCountL()); Serial.print("\t");
+  Serial.println(drivetrain.getCountR());
 
   
   if(runState) { //put in move commands here:
@@ -103,15 +103,14 @@ void loop() {
       //   // delay(waitTime);
       //   drivetrain.turnRight(90, turningSpeed, mpu);
       //   delay(waitTime);
+
+      //   // drivetrain.moveBackward(50, straightSpeed, mpu);
+      //   // delay(waitTime);
+      //   drivetrain.turnLeft(90, turningSpeed, mpu);
+      //   delay(waitTime);
       // }
 
-        // drivetrain.turnRight(90, turningSpeed, mpu);
-
-
-      // startingPoint = Point(0,0);
-      // Point points[] = {Point(1,0), Point(1,2), Point(0,2), Point(2,2)};
-      // startingPoint = Point(0,0);
-      // Point points[] = {Point(0,2)};
+      
       startingPoint = Point(2,0);
       Point points[] = {Point(3,0), Point(3,1), Point(2,1), Point(3,1), Point(3,3), Point(3,2), Point(1,2), Point(1,1), Point(0,1), Point(0,0), Point(0,1), Point(1,1),Point(1,3), Point(2,3)};
       lenPoints = (sizeof(points)/sizeof(points[0]));
@@ -123,7 +122,6 @@ void loop() {
 
       runState = false;
       Serial.println("Run complete");
-      Serial.println(instructions.at(0).multiplier);
   }
   delay(100);
 }

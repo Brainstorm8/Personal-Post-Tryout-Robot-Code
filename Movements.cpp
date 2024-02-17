@@ -2,7 +2,7 @@
 #include "Movements.h"
 
 Movements::Movements() {
-    stepcount = 620.0; //measured
+    stepcount = 620.0; //approximate measurement
     wheeldiameter = 6.70; // Wheel diameter in cm
     wheelCircumference = wheeldiameter * 3.14; // Calculate wheel wheelCircumference in cm
     cm_step = wheelCircumference / stepcount;  // CM per Step
@@ -24,8 +24,11 @@ Movements::Movements() {
     counter_L = 0;
     counter_R = 0;
 
-    rightMotorCal = .98;
+    rightMotorCal = .91;
     leftMotorCal = 1.00;
+
+    backRightMotorCal = .86;
+    backLeftMotorCal = 1.00;
 }
 
 
@@ -86,7 +89,7 @@ void Movements::move(int cm, int maxSpeed, boolean goingForward, MPU6050 mpu) {
     double angularPos = 0;
 
     double errorA = 0;
-    double kpA = 0.20; //.20
+    double kpA = 0.00; //.20
 
     double errorD = steps;
     double kpD = 1.4;//1.8
@@ -96,14 +99,14 @@ void Movements::move(int cm, int maxSpeed, boolean goingForward, MPU6050 mpu) {
     double lpower;
     double rpower;
 
-    counter_L = 0;  //  reset counter A to zero
-    counter_R = 0;  //  reset counter B to zero
+    counter_L = 0; 
+    counter_R = 0;  
     
     // Go forward until step value is reached
-    while (abs(errorD) > 6.0) { //failsafe, ends movement if it takes longer than 5 seconds && (currTime - startTime) < 5000
+    while (abs(errorD) > 6.0) { //can implement failsafe, ends movement if it takes longer than 5 seconds && (currTime - startTime) < 5000
         currTime = millis();
         elapsedTime = currTime - initTime;
-        if(elapsedTime > 100) { //every 100ms
+        if(elapsedTime > 1) { //every 1 ms
             angularVel = mpu.getRotationZ()/131.0;
             angularPos += angularVel*(elapsedTime/1000.0);
 
@@ -159,13 +162,21 @@ void Movements::move(int cm, int maxSpeed, boolean goingForward, MPU6050 mpu) {
         }
 
 
-        analogWrite(enL, lpower*leftMotorCal);
-        analogWrite(enR, rpower*rightMotorCal);
+        if(goingForward) {
+            analogWrite(enL, lpower*leftMotorCal);
+            analogWrite(enR, rpower*rightMotorCal);
+        } else {
+            analogWrite(enL, lpower*backLeftMotorCal);
+            analogWrite(enR, rpower*backRightMotorCal);
+        }
 
-        Serial.print(rpower); Serial.print("\t");
-        Serial.print(lpower); Serial.print("\t");
-        Serial.print(kIntD); Serial.print("\t");
-        Serial.println(errorD);
+
+        Serial.print(getCountL()); Serial.print("\t");
+        Serial.println(getCountR());
+        // Serial.print(rpower); Serial.print("\t");
+        // Serial.print(lpower); Serial.print("\t");
+        // Serial.print(kIntD); Serial.print("\t");
+        // Serial.println(errorD);
     }
 
 
@@ -192,24 +203,25 @@ void Movements::turn(double degrees, int maxSpeed, MPU6050 mpu) {
     double angularPos = 0;
     double angularVel;
     double deltaTheta = degrees - angularPos;
+    double pastDeltaTheta = deltaTheta;
+    double derivDeltaTheta = 0;
     double intDeltaTheta = 0;
 
     const double startTime = millis();
 
-    double kp = 3.3;
-    double ki = .78;
+    double kp = 5.2; //5.1
+    double ki = 0.20;//.07
+    double kd = 0.0; //0
 
     double mpower;
 
-    while(abs(deltaTheta) > 1.0) { //failsafe, end the turn if it takes longer than 3 seconds  && (currTime - startTime) < 3000
+    while(abs(deltaTheta) > 2.0) { //can implement failsafe, end the turn if it takes longer than 3 seconds  && (currTime - startTime) < 3000
         currTime = millis();
         elapsedTime = currTime - initTime;
 
-
-
         deltaTheta = degrees - angularPos; //error
 
-        mpower = kp*deltaTheta + ki*intDeltaTheta; //adding integral term would cause robot to go haywire
+        mpower = kp*deltaTheta + ki*intDeltaTheta + kd*derivDeltaTheta;
 
         if(mpower < 0) {
             mpower = abs(mpower);
@@ -228,11 +240,15 @@ void Movements::turn(double degrees, int maxSpeed, MPU6050 mpu) {
 
         analogWrite(enL, mpower*leftMotorCal);
         analogWrite(enR, mpower*rightMotorCal);
-        if(elapsedTime > 100) {
+        if(elapsedTime > 1) { //polls gyro every 1 ms
             angularVel = mpu.getRotationZ()/131.0;
             angularPos += angularVel*(elapsedTime/1000.0); //integral of angular velocity with respect to time
 
             intDeltaTheta += deltaTheta*(elapsedTime/1000.0); //integral of error with respect to time
+
+            derivDeltaTheta = (deltaTheta - pastDeltaTheta)/(elapsedTime*1000.0); //derivative of error with respect to time
+            pastDeltaTheta = deltaTheta;
+            
             initTime = currTime;
         }
         Serial.print(angularPos); Serial.print("\t");

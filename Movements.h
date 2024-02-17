@@ -67,6 +67,9 @@ class Movements {
 
         double rightMotorCal;
         double leftMotorCal;
+
+        double backRightMotorCal;
+        double backLeftMotorCal;
 };
 
 #endif
