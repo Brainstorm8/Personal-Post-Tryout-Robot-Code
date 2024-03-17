@@ -24,10 +24,10 @@ Movements::Movements() {
     counter_L = 0;
     counter_R = 0;
 
-    rightMotorCal = .91;
+    rightMotorCal = .88;//.92
     leftMotorCal = 1.00;
 
-    backRightMotorCal = .86;
+    backRightMotorCal = .87;
     backLeftMotorCal = 1.00;
 }
 
@@ -89,7 +89,7 @@ void Movements::move(int cm, int maxSpeed, boolean goingForward, MPU6050 mpu) {
     double angularPos = 0;
 
     double errorA = 0;
-    double kpA = 0.00; //.20
+    double kpA = 25.0; //10.0
 
     double errorD = steps;
     double kpD = 1.4;//1.8
@@ -130,23 +130,19 @@ void Movements::move(int cm, int maxSpeed, boolean goingForward, MPU6050 mpu) {
             lpower = maxSpeed;
         }
 
-        // if(goingForward) {
-        //     if(errorA > 0) {
-        //         lpower += abs(errorA*kpA);
-        //         rpower -= abs(errorA*kpA);
-        //     } else if (errorA < 0) {
-        //         lpower -= abs(errorA*kpA);
-        //         rpower += abs(errorA*kpA);
-        //     }
-        // } else {
-        //     if(errorA > 0) {
-        //         lpower -= abs(errorA*kpA);
-        //         rpower += abs(errorA*kpA);
-        //     } else if (errorA < 0) {
-        //         lpower += abs(errorA*kpA);
-        //         rpower -= abs(errorA*kpA);
-        //     }
-        // }
+        if(goingForward) {
+            if(errorA > 0) {
+                rpower -= abs(errorA*kpA);
+            } else if (errorA < 0) {
+                lpower -= abs(errorA*kpA);
+            }
+        } else {
+            if(errorA > 0) {
+                lpower -= abs(errorA*kpA);
+            } else if (errorA < 0) {
+                rpower -= abs(errorA*kpA);
+            }
+        }
 
 
         if(rpower > 255) {
@@ -170,7 +166,7 @@ void Movements::move(int cm, int maxSpeed, boolean goingForward, MPU6050 mpu) {
             analogWrite(enR, rpower*backRightMotorCal);
         }
 
-
+        Serial.print(angularPos); Serial.print("\t");
         Serial.print(getCountL()); Serial.print("\t");
         Serial.println(getCountR());
         // Serial.print(rpower); Serial.print("\t");
@@ -202,24 +198,45 @@ void Movements::turn(double degrees, int maxSpeed, MPU6050 mpu) {
     double elapsedTime;
     double angularPos = 0;
     double angularVel;
-    double deltaTheta = degrees - angularPos;
+    double turnDegrees;
+
+    const double angleOffset = 2.0;
+    if(degrees == 90) { //left turns are default
+        turnDegrees = degrees;
+    } else { //offsets right turns
+        if(degrees > 0) {
+            turnDegrees = degrees - angleOffset;
+        } else {
+            turnDegrees = degrees + angleOffset;
+        }
+    }
+
+    double deltaTheta = turnDegrees - angularPos;
     double pastDeltaTheta = deltaTheta;
     double derivDeltaTheta = 0;
     double intDeltaTheta = 0;
 
     const double startTime = millis();
 
-    double kp = 5.2; //5.1
-    double ki = 0.20;//.07
-    double kd = 0.0; //0
+
+    double kp; //5.2
+    double ki;
+    if(degrees == 90) { //left turn
+        kp = 6.1;
+        ki = 1.0; //.95
+    } else { //right turn
+        kp = 6.7;
+        ki = 1.0;
+    }
+    double kd = 0.80; //.8
 
     double mpower;
 
-    while(abs(deltaTheta) > 2.0) { //can implement failsafe, end the turn if it takes longer than 3 seconds  && (currTime - startTime) < 3000
+    while(abs(deltaTheta) > .50 && (currTime - startTime) < 2500) { //can implement failsafe, end the turn if it takes longer than 3 seconds  && (currTime - startTime) < 3000
         currTime = millis();
         elapsedTime = currTime - initTime;
 
-        deltaTheta = degrees - angularPos; //error
+        deltaTheta = turnDegrees - angularPos; //error
 
         mpower = kp*deltaTheta + ki*intDeltaTheta + kd*derivDeltaTheta;
 
@@ -238,21 +255,22 @@ void Movements::turn(double degrees, int maxSpeed, MPU6050 mpu) {
             mpower = 255;
         }
 
-        analogWrite(enL, mpower*leftMotorCal);
-        analogWrite(enR, mpower*rightMotorCal);
+        analogWrite(enL, mpower);
+        analogWrite(enR, mpower);
         if(elapsedTime > 1) { //polls gyro every 1 ms
             angularVel = mpu.getRotationZ()/131.0;
             angularPos += angularVel*(elapsedTime/1000.0); //integral of angular velocity with respect to time
 
             intDeltaTheta += deltaTheta*(elapsedTime/1000.0); //integral of error with respect to time
 
-            derivDeltaTheta = (deltaTheta - pastDeltaTheta)/(elapsedTime*1000.0); //derivative of error with respect to time
+            derivDeltaTheta = (deltaTheta - pastDeltaTheta)/(elapsedTime/1000.0); //derivative of error with respect to time
             pastDeltaTheta = deltaTheta;
             
             initTime = currTime;
         }
         Serial.print(angularPos); Serial.print("\t");
         Serial.print(ki*intDeltaTheta); Serial.print("\t");
+        Serial.print(kd*derivDeltaTheta); Serial.print("\t");
         Serial.println(deltaTheta);
     }
     analogWrite(enL, 0);

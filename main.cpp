@@ -21,7 +21,7 @@ int lenPoints;
 int straightSpeed = 200;
 int turningSpeed = 200;
 
-const int waitTime = 250; //time between movements in ms
+const int waitTime = 200; //time between movements in ms
 
 std::vector<instruction> instructions;
 
@@ -65,12 +65,12 @@ void setup()
   Serial.begin(9600);
 
   mpu.initialize();
-  mpu.setXGyroOffset(-9);
-  mpu.setYGyroOffset(31);
-  mpu.setZGyroOffset(88);
-  mpu.setXAccelOffset(1505);
-  mpu.setYAccelOffset(1140);
-  mpu.setZAccelOffset(1079);
+  mpu.setXGyroOffset(5);
+  mpu.setYGyroOffset(35);
+  mpu.setZGyroOffset(75);
+  mpu.setXAccelOffset(1547);
+  mpu.setYAccelOffset(1126);
+  mpu.setZAccelOffset(1073);
 
   pinMode(ENCODER_L, INPUT_PULLUP);
   pinMode(ENCODER_R, INPUT_PULLUP);
@@ -101,18 +101,22 @@ void loop() {
       // for(int i = 0; i < 4; i++) {
       //   // drivetrain.moveForward(50, straightSpeed, mpu);
       //   // delay(waitTime);
-      //   drivetrain.turnRight(90, turningSpeed, mpu);
-      //   delay(waitTime);
+      //   // drivetrain.turnRight(90, turningSpeed, mpu);
+      //   // delay(waitTime);
 
       //   // drivetrain.moveBackward(50, straightSpeed, mpu);
       //   // delay(waitTime);
-      //   drivetrain.turnLeft(90, turningSpeed, mpu);
-      //   delay(waitTime);
+      //   // drivetrain.turnLeft(90, turningSpeed, mpu);
+      //   // delay(waitTime);
       // }
+      // drivetrain.moveForward(200, straightSpeed, mpu);
+        // drivetrain.moveBackward(200, straightSpeed, mpu);
+
 
       
-      startingPoint = Point(2,0);
-      Point points[] = {Point(3,0), Point(3,1), Point(2,1), Point(3,1), Point(3,3), Point(3,2), Point(1,2), Point(1,1), Point(0,1), Point(0,0), Point(0,1), Point(1,1),Point(1,3), Point(2,3)};
+      startingPoint = Point(3,0);
+      Point points[] = {Point(3,2), Point(2,2), Point(3,2), Point(3,3), Point(1,3), Point(1,2), Point(0,2), Point(0,1), Point(1,1), Point(0,1), Point (0,2), Point(1,2), Point(1,3), Point(0,3)};
+      // Point points[] = {Point(1,2), Point(0,2), Point(0,0), Point(0,2), Point(2,2), Point(2,3), Point(1,3), Point(2,3), Point(2,1), Point(3,1), Point(3,2), Point(3,1), Point(2,1), Point(2,0), Point(3,0)};
       lenPoints = (sizeof(points)/sizeof(points[0]));
 
       drivetrain.moveForward(25, straightSpeed, mpu);
